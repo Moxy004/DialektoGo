@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "805057821928",
+    "project_id": "dialektogo",
+    "storage_bucket": "dialektogo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:805057821928:android:a0c7cce84b8a694180dd5d",
+        "android_client_info": {
+          "package_name": "com.example.dialektogo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDu7iLiFkrO4BMDiCaSlBFfY60ySklrOfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
