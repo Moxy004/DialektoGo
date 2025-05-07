@@ -67,7 +67,7 @@ public class SignUpPage extends AppCompatActivity {
         View.OnClickListener openDatePicker = v -> {
             final Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH); // 0-indexed
+            int month = calendar.get(Calendar.MONTH);
             int day = calendar.get(Calendar.DAY_OF_MONTH);
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(SignUpPage.this,
@@ -102,6 +102,8 @@ public class SignUpPage extends AppCompatActivity {
         });
 
         btnContinue.setOnClickListener(view -> {
+            btnContinue.setEnabled(false); // Disable the button immediately
+
             String email = editEmail.getText().toString().trim();
             String username = editUsername.getText().toString().trim();
             String month = birthMonth.getText().toString().trim();
@@ -111,37 +113,39 @@ public class SignUpPage extends AppCompatActivity {
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 editEmail.setError("Enter a valid email");
                 editEmail.requestFocus();
+                btnContinue.setEnabled(true);
                 return;
             }
 
             if (username.isEmpty()) {
                 editUsername.setError("Username required");
                 editUsername.requestFocus();
+                btnContinue.setEnabled(true);
                 return;
             }
 
             if (month.isEmpty() || day.isEmpty() || year.isEmpty()) {
                 Toast.makeText(this, "Complete your birthday", Toast.LENGTH_SHORT).show();
+                btnContinue.setEnabled(true);
                 return;
             }
 
             // Generate a 6-digit code
             String verificationCode = String.format("%06d", (int) (Math.random() * 1000000));
 
-            // Send verification email via your API (EmailJS)
             Map<String, Object> emailData = new HashMap<>();
             emailData.put("service_id", "service_azuofda");
             emailData.put("template_id", "template_j570oig");
             emailData.put("user_id", "fiLYOS_ZMch-OAh02");
 
             Map<String, String> templateParams = new HashMap<>();
-            templateParams.put("name", username);
+            templateParams.put("to_name", username);
+            templateParams.put("email", email);
             templateParams.put("time", new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date()));
             templateParams.put("message", "Please verify your email for DialektoGo.");
-            templateParams.put("verification_code", verificationCode); // You will send this verification code to the user
+            templateParams.put("verification_code", verificationCode);
             emailData.put("template_params", templateParams);
 
-            // Retrofit setup to send email via EmailJS
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl("https://api.emailjs.com/")
                     .addConverterFactory(GsonConverterFactory.create())
@@ -149,7 +153,6 @@ public class SignUpPage extends AppCompatActivity {
 
             EmailJSApi emailService = retrofit.create(EmailJSApi.class);
 
-            // Sending the email
             emailService.sendEmail(emailData).enqueue(new Callback<Void>() {
                 @Override
                 public void onResponse(Call<Void> call, Response<Void> response) {
@@ -158,12 +161,11 @@ public class SignUpPage extends AppCompatActivity {
                                 "Verification code sent to " + email,
                                 Toast.LENGTH_SHORT).show();
 
-                        // Send user details to sign_up_verify_email (but don't create user in Firebase yet)
                         Intent intent = new Intent(SignUpPage.this, sign_up_verify_email.class);
                         intent.putExtra("email", email);
                         intent.putExtra("username", username);
                         intent.putExtra("birthdate", month + "/" + day + "/" + year);
-                        intent.putExtra("verificationCode", verificationCode); // Send the code to verify
+                        intent.putExtra("verificationCode", verificationCode);
                         startActivity(intent);
                         finish();
                     } else {
@@ -174,6 +176,7 @@ public class SignUpPage extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        btnContinue.setEnabled(true); // Re-enable on failure
                     }
                 }
 
@@ -181,9 +184,9 @@ public class SignUpPage extends AppCompatActivity {
                 public void onFailure(Call<Void> call, Throwable t) {
                     Log.e("EmailJS Failure", t.getMessage(), t);
                     Toast.makeText(SignUpPage.this, "Email sending failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    btnContinue.setEnabled(true); // Re-enable on failure
                 }
             });
         });
-
     }
 }

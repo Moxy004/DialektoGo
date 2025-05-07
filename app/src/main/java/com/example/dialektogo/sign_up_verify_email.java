@@ -10,9 +10,6 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,9 +24,11 @@ public class sign_up_verify_email extends AppCompatActivity {
     EditText codeInput;
     TextView resendCode;
     Button btnContinue;
-    FirebaseAuth mAuth;
-    FirebaseUser user;
+
     String sentVerificationCode;
+    String email;
+    String username;
+    String birthdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,64 +36,69 @@ public class sign_up_verify_email extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sign_up_verify_email);
 
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
+        // Get the passed values from the previous activity
+        email = getIntent().getStringExtra("email");
+        sentVerificationCode = getIntent().getStringExtra("verificationCode");
+        username = getIntent().getStringExtra("username");
+        birthdate = getIntent().getStringExtra("birthdate");
 
+        // Initialize UI components
         btnContinue = findViewById(R.id.btnContinue);
         resendCode = findViewById(R.id.resendCode);
         codeInput = findViewById(R.id.codeInput);
 
-        // Get the verification code sent to the email
-        sentVerificationCode = getIntent().getStringExtra("verificationCode");
-
+        // Handle Continue button click
+        // Handle Continue button click
         btnContinue.setOnClickListener(v -> {
+            btnContinue.setEnabled(false);  // Disable immediately to prevent multiple taps
+
             String enteredCode = codeInput.getText().toString().trim();
 
             if (enteredCode.isEmpty()) {
                 Toast.makeText(sign_up_verify_email.this, "Please enter the verification code.", Toast.LENGTH_SHORT).show();
+                btnContinue.setEnabled(true);  // Re-enable on failure
                 return;
             }
 
             if (enteredCode.equals(sentVerificationCode)) {
-                // Verification code is correct, proceed to the next step
+                // Code is correct, proceed
                 Intent intent = new Intent(sign_up_verify_email.this, sign_up_password.class);
-                intent.putExtra("email", user.getEmail());
+                intent.putExtra("email", email);
+                intent.putExtra("username", username);
+                intent.putExtra("birthdate", birthdate);
                 startActivity(intent);
                 finish();
             } else {
-                // Code does not match
                 Toast.makeText(sign_up_verify_email.this, "Invalid code. Please try again.", Toast.LENGTH_SHORT).show();
+                btnContinue.setEnabled(true);  // Re-enable on failure
             }
         });
 
-        // Handle Resend Code button click
+// Handle Resend Code click
         resendCode.setOnClickListener(v -> {
-            if (user != null) {
-                // Send the verification code again via your custom API (EmailJS)
-                sendVerificationCodeAgain(user.getEmail());
+            resendCode.setEnabled(false); // Disable immediately to avoid spamming
+            if (email != null && !email.isEmpty()) {
+                sendVerificationCodeAgain(email);
             } else {
-                Toast.makeText(sign_up_verify_email.this, "No user found. Please log in again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(sign_up_verify_email.this, "Email is missing. Please restart the registration process.", Toast.LENGTH_SHORT).show();
+                resendCode.setEnabled(true); // Re-enable if something goes wrong
             }
         });
     }
 
-    // Function to resend verification code via your API (EmailJS)
     private void sendVerificationCodeAgain(String email) {
-        // Generate a new 6-digit verification code
         String newVerificationCode = String.format("%06d", (int) (Math.random() * 1000000));
 
-        // Send verification code via your API (EmailJS)
         Map<String, Object> emailData = new HashMap<>();
         emailData.put("service_id", "service_azuofda");
         emailData.put("template_id", "template_j570oig");
         emailData.put("user_id", "fiLYOS_ZMch-OAh02");
 
         Map<String, String> templateParams = new HashMap<>();
-        templateParams.put("email", email);  // Email of the user
-        templateParams.put("verification_code", newVerificationCode);  // New verification code to send
+        templateParams.put("email", email);
+        templateParams.put("verification_code", newVerificationCode);
         emailData.put("template_params", templateParams);
 
-        // Retrofit setup to send email via EmailJS
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.emailjs.com/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -105,10 +109,10 @@ public class sign_up_verify_email extends AppCompatActivity {
         emailService.sendEmail(emailData).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
+                resendCode.setEnabled(true); // Re-enable after response
+
                 if (response.isSuccessful()) {
                     Toast.makeText(sign_up_verify_email.this, "Verification code resent. Please check your inbox.", Toast.LENGTH_SHORT).show();
-
-                    // Update the sentVerificationCode to the new code
                     sentVerificationCode = newVerificationCode;
                 } else {
                     Toast.makeText(sign_up_verify_email.this, "Failed to resend email. Please try again later.", Toast.LENGTH_SHORT).show();
@@ -117,6 +121,7 @@ public class sign_up_verify_email extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
+                resendCode.setEnabled(true); // Re-enable on failure
                 Toast.makeText(sign_up_verify_email.this, "Error sending verification email: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

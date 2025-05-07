@@ -40,6 +40,8 @@ public class sign_up_password extends AppCompatActivity {
 
         // Handle Continue button click
         btnContinue.setOnClickListener(v -> {
+            btnContinue.setEnabled(false); // Prevent multiple taps
+
             String password = passwordInput.getText().toString().trim();
             String email = getIntent().getStringExtra("email");
             String username = getIntent().getStringExtra("username");
@@ -47,6 +49,7 @@ public class sign_up_password extends AppCompatActivity {
 
             if (password.length() < 8) {
                 Toast.makeText(this, "Password must be at least 8 characters.", Toast.LENGTH_SHORT).show();
+                btnContinue.setEnabled(true); // Re-enable on failure
                 return;
             }
 
@@ -73,9 +76,11 @@ public class sign_up_password extends AppCompatActivity {
                                         finish();
                                     })
                                     .addOnFailureListener(e -> {
+                                        btnContinue.setEnabled(true); // Re-enable on failure
                                         Toast.makeText(this, "Firestore error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                                     });
                         } else {
+                            btnContinue.setEnabled(true); // Re-enable on failure
                             Toast.makeText(this, "Sign up failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
