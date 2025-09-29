@@ -73,7 +73,7 @@ DialektoGo is a mobile application designed to help foreigners learn Filipino in
 
 ## 👨‍💻 Developer
 
-Developer: **Jaren Dwyane Luna**
-Developer: **John Patrick H. Ilagan**
-Designed by **Charles Alden Lorico**  
+Developer: **Jaren Dwyane Luna**\n
+Developer: **John Patrick H. Ilagan**\n
+Designed by **Charles Alden Lorico**\n
 Entrepreneurship Project — DialektoGo
