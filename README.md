@@ -135,7 +135,6 @@ This project is available for use and modification.
 
 ## 👤 Authors
 
-**Moxy004**
 - GitHub: [@Moxy004](https://github.com/Moxy004)
 - GitHub: [@PatrickIlagan](https://github.com/PatrickIlagan)
 
